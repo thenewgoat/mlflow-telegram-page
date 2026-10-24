@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Training Curves</title>
+<link rel="icon" href="data:,">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<script src="boot.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="echarts-5.6.0.min.js"></script>
+<style>
+  :root {
+    --bg: #fcfcfb; --bg-2: #f0efec; --ink: #0b0b0b; --ink-2: #52514e; --grid: #e4e3df;
+    --accent: #2a78d6; --on-accent: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1a19; --bg-2: #2a2a28; --ink: #ffffff; --ink-2: #c3c2b7; --grid: #383835;
+      --accent: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a1a19; --bg-2: #2a2a28; --ink: #ffffff; --ink-2: #c3c2b7; --grid: #383835;
+    --accent: #3987e5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  /* Telegram's own header or banner can sit over the top of the page on phones:
+     keep clear of it (Telegram's script sets these variables; env() is the browser's own). */
+  body { width: 100vw; overflow-x: hidden; padding-bottom: 16px;
+    padding-top: max(env(safe-area-inset-top, 0px),
+      calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px))); }
+  /* The readout: values under the finger, above the plot, never on it. */
+  /* In normal flow with a fixed height, so the chart below never jumps as values
+     come and go; long names are cut, many curves scroll inside it. */
+  #readout { margin: 6px 12px 0; padding: 6px 8px; height: 72px;
+    overflow-y: auto; overflow-x: hidden; background: var(--bg-2); border-radius: 10px;
+    font-size: 12px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px 12px;
+    align-content: start; }
+  #readout.wide { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  #readout .head { grid-column: 1 / -1; color: var(--ink-2); }
+  #readout .row-v { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  #readout .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: var(--ink-2); }
+  #readout .value { font-variant-numeric: tabular-nums; color: var(--ink); }
+  .dot { flex: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+  .dash { flex: none; display: inline-block; }
+  #chart { height: 420px; width: 100%; touch-action: none; }   /* set from the viewport in JS */
+  #message { padding: 24px 16px; color: var(--ink-2); display: none; }
+  section { padding: 4px 12px 0; display: flex; flex-direction: column; gap: 8px; }
+  .row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; align-items: center;
+    max-width: calc(100vw - 24px); }
+  .row::-webkit-scrollbar { display: none; }
+  .wrap { flex-wrap: wrap; overflow-x: visible; }
+  .label { flex: none; color: var(--ink-2); font-size: 12px; min-width: 52px; }
+  .chip { flex: none; border: 1px solid var(--grid); background: var(--bg-2); color: var(--ink);
+    border-radius: 999px; padding: 7px 12px; font-size: 13px; white-space: nowrap; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; }
+  .chip.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  select.chip { appearance: none; }
+  input[type=range] { flex: 1 1 auto; min-width: 80px; accent-color: var(--accent); }
+  .hint { color: var(--ink-2); font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="readout"></div>
+<div id="message"></div>
+<div id="chart"></div>
+<section>
+  <div class="row" id="ranges"></div>
+  <div class="row wrap" id="runs"></div>
+  <div class="row wrap" id="keys"></div>
+  <div class="row">
+    <button class="chip" id="log">Log y</button>
+    <span class="label">Smooth</span>
+    <input type="range" id="smooth" min="0" max="0.99" step="0.01" value="0">
+    <span class="label" id="smooth-value">off</span>
+  </div>
+</section>
+<script src="app.js"></script>
+</body>
+</html>
